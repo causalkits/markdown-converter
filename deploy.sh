@@ -16,7 +16,7 @@ git init
 git add -A
 git commit -m 'deploy'
 
-# 如果你要部署在 https://<USERNAME>.github.io/<REPO>
+# 如果你要部署在 https://causalkits.github.io/markdown-converter
 git push -f git@github.com:causalkits/markdown-converter.git main:gh-pages
 
 cd - 
