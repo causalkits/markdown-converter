@@ -9,14 +9,12 @@ npm run build
 # 进入构建文件夹
 cd dist
 
-# 如果你要部署到自定义域名
-# echo 'www.example.com' > CNAME
 
 git init
 git add -A
 git commit -m 'deploy'
 
-# 如果你要部署在 https://causalkits.github.io/markdown-converter
+# 部署到 GitHub Pages
 git push -f git@github.com:causalkits/markdown-converter.git main:gh-pages
 
-cd - 
+cd -
