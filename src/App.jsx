@@ -22,7 +22,8 @@ window.MathJax = {
 const md = new MarkdownIt({
   html: true,
   breaks: true,
-  typographer: true
+  typographer: true,
+  linkify: true
 })
 
 // 使用 mathjax3 插件
@@ -32,13 +33,14 @@ function App() {
   const [text, setText] = useState('')
 
   const convertDelimiters = (input) => {
+    // 保留原始换行符
     let result = input
       // 处理显示公式，移除 \[ 和 \] 前后的空格
-      .replace(/\s*\\\[\s*/g, '$$')
-      .replace(/\s*\\\]\s*/g, '$$')
+      .replace(/\\\[/g, '$$$$')
+      .replace(/\\\]/g, '$$$$\n')  // 显示公式后添加换行
       // 处理行内公式，移除 \( 和 \) 前后的空格
-      .replace(/\s*\\\(\s*/g, '$')
-      .replace(/\s*\\\)\s*/g, '$')
+      .replace(/\\\(\s*/g, '$')
+      .replace(/\s*\\\)/g, '$')
     return result
   }
 
@@ -48,9 +50,17 @@ function App() {
 
   const convertedText = convertDelimiters(text)
   const htmlContent = md.render(convertedText)
+    .replace(/\n/g, '<br>')
+    .replace(/<br><br>/g, '<br>')
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(convertedText)
+    // 确保复制的文本包含换行符
+    const textToCopy = convertedText
+      .replace(/\r\n/g, '\n')  // 统一换行符
+      .replace(/\r/g, '\n')    // 统一换行符
+      .replace(/\n{3,}/g, '\n\n')  // 限制最大连续换行数为2
+
+    navigator.clipboard.writeText(textToCopy)
     toast.success('复制成功！', {
       position: 'bottom-right',
       autoClose: 1500,
