@@ -37,7 +37,7 @@ function App() {
     let result = input
       // 处理显示公式
       .replace(/\\\[/g, '$$$$')
-      .replace(/\\\]/g, '$$$$')
+      .replace(/\\\]/g, '$$$$\n')
       // 处理行内公式
       .replace(/\\\(\s*/g, '$')
       .replace(/\s*\\\)/g, '$')
