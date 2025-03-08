@@ -18,5 +18,8 @@ export default defineConfig({
         assetFileNames: 'assets/[name].[hash].[ext]'
       }
     }
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.json']  // 添加文件扩展名解析
   }
 })
