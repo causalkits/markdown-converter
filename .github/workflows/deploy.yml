@@ -2,12 +2,12 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ gh-pages ]  # 当 main 分支收到推送时触发
-  workflow_dispatch:    # 允许手动触发
+    branches: [ main ]  # 改回 main 分支，因为这是主要开发分支
+  workflow_dispatch:
 
 # 设置 GITHUB_TOKEN 的权限
 permissions:
-  contents: read
+  contents: write       # 修改权限以允许推送到 gh-pages 分支
   pages: write
   id-token: write
 
@@ -17,10 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:    # 合并为单个 job
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,31 +26,17 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'  # 选择你的 Node.js 版本
+          node-version: '20'
+          cache: 'npm'    # 恢复缓存配置
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci       # 使用 ci 而不是 install 以确保一致性
 
-      - name: Build the project
+      - name: Build
         run: npm run build
 
-
-
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/gh-pages'
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: production-files
-          path: ./dist
-
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@v3  # 使用 v3 版本
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
