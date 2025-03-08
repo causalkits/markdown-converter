@@ -2,6 +2,7 @@
   "name": "markdown-converter",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://causalkits.github.io/markdown-converter/",
   "type": "module",
   "scripts": {
     "dev": "vite",
