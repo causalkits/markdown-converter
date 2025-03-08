@@ -17,7 +17,10 @@ export default defineConfig({
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]'
       }
-    }
+    },
+    minify: 'terser',
+    sourcemap: false,
+    cssCodeSplit: true
   },
   resolve: {
     extensions: ['.js', '.jsx', '.json']  // 添加文件扩展名解析
