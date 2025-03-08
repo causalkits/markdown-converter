@@ -35,12 +35,14 @@ function App() {
   const convertDelimiters = (input) => {
     // 保留原始换行符
     let result = input
-      // 处理显示公式，移除 \[ 和 \] 前后的空格
+      // 处理显示公式
       .replace(/\\\[/g, '$$$$')
-      .replace(/\\\]/g, '$$$$\n')  // 显示公式后添加换行
-      // 处理行内公式，移除 \( 和 \) 前后的空格
+      .replace(/\\\]/g, '$$$$')  // 显示公式后添加换行
+      // 处理行内公式
       .replace(/\\\(\s*/g, '$')
       .replace(/\s*\\\)/g, '$')
+      // 处理换行符
+      .replace(/([^\n])\n([^\n])/g, '$1  \n$2')  // 在单行换行前添加两个空格
     return result
   }
 
@@ -50,8 +52,9 @@ function App() {
 
   const convertedText = convertDelimiters(text)
   const htmlContent = md.render(convertedText)
-    .replace(/\n/g, '<br>')
-    .replace(/<br><br>/g, '<br>')
+    // 移除多余的换行处理
+    // .replace(/\n/g, '<br>')
+    // .replace(/<br><br>/g, '<br>')
 
   const handleCopy = () => {
     // 确保复制的文本包含换行符
@@ -59,6 +62,7 @@ function App() {
       .replace(/\r\n/g, '\n')  // 统一换行符
       .replace(/\r/g, '\n')    // 统一换行符
       .replace(/\n{3,}/g, '\n\n')  // 限制最大连续换行数为2
+      .replace(/  \n/g, '\n')  // 移除复制时的额外空格
 
     navigator.clipboard.writeText(textToCopy)
     toast.success('复制成功！', {
