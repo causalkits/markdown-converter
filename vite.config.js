@@ -8,7 +8,7 @@ export default defineConfig({
   base: '/markdown-converter/',
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
+    assetsDir: 'assets',  // 恢复 assets 目录
     rollupOptions: {
       input: resolve(__dirname, 'index.html'),
       output: {
