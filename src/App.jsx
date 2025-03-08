@@ -21,7 +21,7 @@ window.MathJax = {
 // 创建 MarkdownIt 实例
 const md = new MarkdownIt({
   html: true,
-  breaks: true,
+  breaks: false,  // 禁用自动换行
   typographer: true,
   linkify: true
 })
@@ -37,12 +37,13 @@ function App() {
     let result = input
       // 处理显示公式
       .replace(/\\\[/g, '$$$$')
-      .replace(/\\\]/g, '$$$$')  // 显示公式后添加换行
+      .replace(/\\\]/g, '$$$$')
       // 处理行内公式
       .replace(/\\\(\s*/g, '$')
       .replace(/\s*\\\)/g, '$')
-      // 处理换行符
-      .replace(/([^\n])\n([^\n])/g, '$1  \n$2')  // 在单行换行前添加两个空格
+      // 处理换行：只保留两个及以上的换行符
+      .replace(/\n{3,}/g, '\n\n')  // 限制最大连续换行数为2
+      .replace(/([^\n])\n(?!\n)([^\n])/g, '$1 $2')  // 移除单个换行
     return result
   }
 
@@ -52,9 +53,6 @@ function App() {
 
   const convertedText = convertDelimiters(text)
   const htmlContent = md.render(convertedText)
-    // 移除多余的换行处理
-    // .replace(/\n/g, '<br>')
-    // .replace(/<br><br>/g, '<br>')
 
   const handleCopy = () => {
     // 确保复制的文本包含换行符
@@ -62,7 +60,6 @@ function App() {
       .replace(/\r\n/g, '\n')  // 统一换行符
       .replace(/\r/g, '\n')    // 统一换行符
       .replace(/\n{3,}/g, '\n\n')  // 限制最大连续换行数为2
-      .replace(/  \n/g, '\n')  // 移除复制时的额外空格
 
     navigator.clipboard.writeText(textToCopy)
     toast.success('复制成功！', {
