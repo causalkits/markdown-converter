@@ -43,7 +43,6 @@ function App() {
       .replace(/\s*\\\)/g, '$')
       // 处理换行：只保留两个及以上的换行符
       .replace(/\n{3,}/g, '\n\n')  // 限制最大连续换行数为2
-      .replace(/([^\n])\n(?!\n)([^\n])/g, '$1 $2')  // 移除单个换行
     return result
   }
 
