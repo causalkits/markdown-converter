@@ -11,9 +11,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.0",
+    "html2pdf.js": "^0.10.3",
     "katex": "^0.16.21",
     "markdown-it": "^14.1.0",
     "markdown-it-mathjax3": "^4.3.2",
+    "mathjax": "^3.2.2",
+    "pdfmake": "^0.2.18",
+    "puppeteer-core": "^24.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-toastify": "^11.0.5"
