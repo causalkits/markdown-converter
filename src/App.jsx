@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
 import MarkdownIt from 'markdown-it'
 import mathjax3 from 'markdown-it-mathjax3'
@@ -209,6 +209,15 @@ const loadMathJax = async () => {
 function App() {
   const [text, setText] = useState('')
   const [isExporting, setIsExporting] = useState(false)
+  const editorRef = useRef(null)
+  const previewRef = useRef(null)
+  const [lastScrollSource, setLastScrollSource] = useState(null);
+  const [activePanel, setActivePanel] = useState(null);
+
+  // 添加一个防抖定时器引用
+  const scrollTimer = useRef(null);
+  // 添加一个状态来存储待同步的位置
+  const pendingSync = useRef(null);
 
   const convertDelimiters = (input) => {
     // 保留原始换行符
@@ -419,19 +428,151 @@ function App() {
     }
   }
 
+  // 计算两个字符串的相似度
+  const similarity = (s1, s2) => {
+    if (s1.length < s2.length) [s1, s2] = [s2, s1]
+    const distances = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(0))
+    for (let i = 0; i <= s1.length; i++) distances[0][i] = i
+    for (let j = 0; j <= s2.length; j++) distances[j][0] = j
+    
+    for (let j = 1; j <= s2.length; j++) {
+      for (let i = 1; i <= s1.length; i++) {
+        if (s1[i-1] === s2[j-1]) {
+          distances[j][i] = distances[j-1][i-1]
+        } else {
+          distances[j][i] = Math.min(
+            distances[j-1][i] + 1,   // 删除
+            distances[j][i-1] + 1,   // 插入
+            distances[j-1][i-1] + 1  // 替换
+          )
+        }
+      }
+    }
+    return 1 - distances[s2.length][s1.length] / Math.max(s1.length, s2.length)
+  }
+
+  // 修改 findMatchingPosition 函数
+  const findMatchingPosition = (source, target, sourcePos) => {
+    const sourceText = source.value || source.textContent
+    const targetText = target.value || target.textContent
+    
+    // 获取源文本从顶部到当前位置的内容
+    const sourceTopContent = sourceText.substring(0, Math.floor(sourcePos / source.scrollHeight * sourceText.length))
+    const paragraphs = sourceTopContent.split('\n\n')
+    
+    // 获取最后几个段落作为匹配内容
+    const lastParagraphs = paragraphs.slice(-3).join('\n\n')
+    
+    // 在目标文本中查找匹配位置
+    let bestMatch = 0
+    let bestSimilarity = 0
+    const targetParagraphs = targetText.split('\n\n')
+    
+    // 从头开始查找，确保顶部对齐
+    for (let i = 0; i < targetParagraphs.length - 2; i++) {
+      const targetSlice = targetParagraphs.slice(i, i + 3).join('\n\n')
+      const currentSimilarity = similarity(lastParagraphs, targetSlice)
+      
+      if (currentSimilarity > bestSimilarity) {
+        bestSimilarity = currentSimilarity
+        // 计算匹配位置
+        const precedingContent = targetParagraphs.slice(0, i).join('\n\n')
+        bestMatch = (precedingContent.length / targetText.length) * target.scrollHeight
+      }
+    }
+    
+    // 如果没有找到好的匹配，使用简单的比例计算
+    if (bestSimilarity < 0.3) {
+      return (sourcePos / source.scrollHeight) * target.scrollHeight
+    }
+    
+    return bestMatch
+  }
+
+  const handleMouseEnter = (panel) => () => {
+    setActivePanel(panel);
+  };
+
+  // 修改滚动处理函数中的滚动行为
+  const handleScroll = (source) => (e) => {
+    const sourceElement = e.target;
+    const sourceScrollTop = sourceElement.scrollTop;
+    
+    // 只在鼠标在源面板上时处理
+    if (source === activePanel) {
+      // 清除之前的定时器
+      if (scrollTimer.current) {
+        clearTimeout(scrollTimer.current);
+      }
+
+      // 存储当前滚动位置和相关信息
+      pendingSync.current = {
+        source,
+        sourceElement,
+        sourceScrollTop
+      };
+
+      // 设置新的定时器，等待用户停止滚动
+      scrollTimer.current = setTimeout(() => {
+        // 用户已停止滚动，执行同步
+        const { source, sourceElement, sourceScrollTop } = pendingSync.current;
+
+        if (source === 'editor' && previewRef.current) {
+          const previewElement = previewRef.current;
+          const targetScrollTop = findMatchingPosition(
+            sourceElement,
+            previewElement,
+            sourceScrollTop
+          );
+          
+          previewElement.scrollTo({
+            top: targetScrollTop,
+            behavior: 'instant'  // 改为即时滚动，避免平滑滚动造成的延迟
+          });
+        }
+        else if (source === 'preview' && editorRef.current) {
+          const editorElement = editorRef.current;
+          const targetScrollTop = findMatchingPosition(
+            sourceElement,
+            editorElement,
+            sourceScrollTop
+          );
+          
+          editorElement.scrollTo({
+            top: targetScrollTop,
+            behavior: 'instant'  // 改为即时滚动
+          });
+        }
+
+        // 清除待同步信息
+        pendingSync.current = null;
+      }, 150);
+    }
+  };
+
   return (
     <div className="app-container">
-      <div className="editor">
+      <div 
+        className="editor"
+        onMouseEnter={handleMouseEnter('editor')}
+      >
         <textarea
+          ref={editorRef}
           value={text}
           onChange={handleTextChange}
+          onScroll={handleScroll('editor')}
           placeholder="在此输入Markdown文本..."
         />
       </div>
-      <div className="preview">
+      <div 
+        className="preview"
+        onMouseEnter={handleMouseEnter('preview')}
+      >
         <div 
+          ref={previewRef}
           className="preview-content"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
+          onScroll={handleScroll('preview')}
         />
         <div className="button-group">
           <button onClick={handleCopy} className="action-button">
