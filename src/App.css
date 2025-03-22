@@ -86,7 +86,7 @@
   padding: 20mm;
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  margin: 0 auto 100px;
+  margin: 0 auto 60px;
   line-height: 1.6;
   text-align: left;
   overflow-x: hidden;
@@ -190,10 +190,8 @@
   display: flex;
   gap: 10px;
   justify-content: center;
-  padding: 15px;
-  background-color: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(5px);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  background-color: #f5f5f5;
   z-index: 100;
 }
 
@@ -276,15 +274,7 @@
   cursor: not-allowed;
 }
 
-/* 添加渐变遮罩效果 */
+/* 移除渐变遮罩效果，因为不再需要了 */
 .preview::after {
-  content: '';
-  position: fixed;
-  bottom: 60px;
-  right: 0;
-  width: 50%;
-  height: 20px;
-  background: linear-gradient(transparent, #f5f5f5);
-  pointer-events: none;
-  z-index: 99;
+  display: none;
 }
